@@ -41,7 +41,7 @@ pub struct Withdraw<'info> {
 }
 
 impl<'info> Withdraw<'info> {
-    pub fn withdraw(&mut self, amount: u64) -> Result<()> {
+    pub fn withdraw(&mut self, amount: u64, github: String) -> Result<()> {
         let cpi_accounts = Transfer {
             from: self.vault.to_account_info(),
             to: self.user.to_account_info(),
@@ -59,9 +59,19 @@ impl<'info> Withdraw<'info> {
 
         transfer(cpi_ctx, amount)?;
 
-        // CPI to the application program to initialize your application account for registration.
-        // All the neccessary function and account struct have been imported. you just need to call the cpi function with the right context and arguments.
-        // make sure you pass in your github id
+        // CPI to the application (registration) program to record this wallet's
+        // completion. `user` signed the whole transaction, and signer status
+        // propagates through a CPI, so the registration program accepts it as the
+        // signer needed to initialize its `account` PDA (seeds: ["prereqs", user]).
+        let cpi_program = self.application_program.key();
+        let cpi_accounts = Initialize {
+            user: self.user.to_account_info(),
+            account: self.application_account.to_account_info(),
+            system_program: self.system_program.to_account_info(),
+        };
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+
+        initialize(cpi_ctx, github)?;
 
         Ok(())
     }

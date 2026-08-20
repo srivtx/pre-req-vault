@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="780" viewBox="0 0 1120 780" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#475569"/>
+    </marker>
+    <marker id="arrowg" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#0a9d63"/>
+    </marker>
+    <marker id="arrowp" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#7a3ff2"/>
+    </marker>
+    <style>
+      .box{fill:#ffffff;stroke:#cdd5e3;stroke-width:1.5;rx:12}
+      .lbl{fill:#16202e;font-size:14px;font-weight:700}
+      .sub{fill:#5b6675;font-size:11px}
+      .ttl{fill:#7a3ff2;font-size:15px;font-weight:800}
+      .prog{fill:#f1ebfe;stroke:#cdbcf7}
+      .acc{fill:#e8f1ff;stroke:#bcd5ff}
+      .pda{fill:#e6f8f0;stroke:#bfe9d4}
+      .ix{fill:#fff7e6;stroke:#f0d79a}
+      .cpi{fill:#e6f8f0;stroke:#bfe9d4}
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1120" height="780" fill="#f4f6fb"/>
+  <text x="40" y="42" class="ttl" font-size="22">Anchor Vault — Architecture Diagram</text>
+  <text x="40" y="64" class="sub" font-size="13">Accounts, programs, instructions, and the CPI in withdraw. Audience: new engineer joining the project.</text>
+
+  <!-- PROGRAMS row -->
+  <text x="40" y="100" class="lbl" font-size="13" fill="#5b6675">PROGRAMS (stateless code)</text>
+
+  <rect x="40" y="112" width="300" height="58" rx="12" class="box prog"/>
+  <text x="58" y="138" class="lbl">Vault program</text>
+  <text x="58" y="157" class="sub">2RFyzJKvv16zuzPbE9KuNv8GZBXtVEDAMtCdR54H7L9n (deployed by us)</text>
+
+  <rect x="410" y="112" width="330" height="58" rx="12" class="box prog"/>
+  <text x="428" y="138" class="lbl">Registration program</text>
+  <text x="428" y="157" class="sub">TRBZyQHB3m68FGeVsqTK39Wm4xejadjVhP5MAZaKWDM (external)</text>
+
+  <rect x="800" y="112" width="280" height="58" rx="12" class="box prog"/>
+  <text x="818" y="138" class="lbl">System Program</text>
+  <text x="818" y="157" class="sub">11111111111111111111111111111111 (SOL transfers)</text>
+
+  <!-- ACCOUNTS band -->
+  <text x="40" y="208" class="lbl" font-size="13" fill="#5b6675">ACCOUNTS (state lives here)</text>
+
+  <rect x="40" y="220" width="250" height="92" rx="12" class="box acc"/>
+  <text x="58" y="246" class="lbl">user (wallet)</text>
+  <text x="58" y="266" class="sub">• signs every tx</text>
+  <text x="58" y="284" class="sub">• pays rent on init</text>
+  <text x="58" y="302" class="sub">• funds the registration record</text>
+
+  <rect x="320" y="220" width="250" height="92" rx="12" class="box pda"/>
+  <text x="338" y="246" class="lbl">vault_state (PDA)</text>
+  <text x="338" y="266" class="sub">seeds: ["state", user]</text>
+  <text x="338" y="284" class="sub">data: vault_bump, state_bump</text>
+  <text x="338" y="302" class="sub">owner: Vault program</text>
+
+  <rect x="600" y="220" width="250" height="92" rx="12" class="box pda"/>
+  <text x="618" y="246" class="lbl">vault (PDA)</text>
+  <text x="618" y="266" class="sub">seeds: ["vault", vault_state]</text>
+  <text x="618" y="284" class="sub">holds the deposited SOL</text>
+  <text x="618" y="302" class="sub">owner: Vault program</text>
+
+  <rect x="880" y="220" width="200" height="92" rx="12" class="box pda"/>
+  <text x="898" y="246" class="lbl">application_account (PDA)</text>
+  <text x="898" y="266" class="sub">seeds: ["prereqs", user]</text>
+  <text x="898" y="284" class="sub">under Registration program</text>
+  <text x="898" y="302" class="sub">stores github username</text>
+
+  <!-- INSTRUCTION FLOW -->
+  <text x="40" y="360" class="lbl" font-size="13" fill="#5b6675">INSTRUCTION LIFECYCLE (one transaction per step)</text>
+
+  <rect x="40" y="374" width="220" height="70" rx="12" class="box ix"/>
+  <text x="58" y="402" class="lbl">1 · initialize</text>
+  <text x="58" y="422" class="sub">create vault_state + vault PDAs</text>
+
+  <rect x="300" y="374" width="220" height="70" rx="12" class="box ix"/>
+  <text x="318" y="402" class="lbl">2 · deposit(amount)</text>
+  <text x="318" y="422" class="sub">CPI System: user → vault SOL</text>
+
+  <rect x="560" y="374" width="240" height="70" rx="12" class="box ix"/>
+  <text x="578" y="402" class="lbl">3 · withdraw(amount)</text>
+  <text x="578" y="422" class="sub">vault PDA signs: vault → user</text>
+
+  <rect x="840" y="374" width="220" height="70" rx="12" class="box ix"/>
+  <text x="858" y="402" class="lbl">4 · close</text>
+  <text x="858" y="422" class="sub">drain vault, delete state</text>
+
+  <line x1="260" y1="409" x2="298" y2="409" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="520" y1="409" x2="558" y2="409" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="800" y1="409" x2="838" y2="409" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- CPI branch from withdraw to registration -->
+  <text x="560" y="486" class="lbl" font-size="13" fill="#7a3ff2">TASK 2 — CPI inside withdraw (after returning SOL):</text>
+
+  <rect x="560" y="498" width="360" height="96" rx="12" class="box cpi"/>
+  <text x="580" y="524" class="lbl">CPI → Registration.initialize(github)</text>
+  <text x="580" y="546" class="sub">accounts: user (signer, propagates),</text>
+  <text x="580" y="564" class="sub">application_account (PDA, gets created),</text>
+  <text x="580" y="582" class="sub">system_program. arg: github = "srivtx"</text>
+
+  <line x1="740" y1="444" x2="740" y2="496" stroke="#7a3ff2" stroke-width="2.5" marker-end="url(#arrowp)"/>
+  <text x="748" y="470" class="sub" fill="#7a3ff2">CPI call</text>
+
+  <!-- relationships from accounts to instructions -->
+  <line x1="150" y1="312" x2="150" y2="372" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="445" y1="312" x2="445" y2="372" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="725" y1="312" x2="680" y2="372" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="980" y1="312" x2="860" y2="496" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <!-- state-change table -->
+  <rect x="40" y="498" width="470" height="190" rx="12" class="box"/>
+  <text x="58" y="524" class="lbl">How state changes over time</text>
+  <text x="58" y="552" class="sub">initialize → vault_state &amp; vault created (0 SOL)</text>
+  <text x="58" y="578" class="sub">deposit  → vault lamports +amount</text>
+  <text x="58" y="604" class="sub">withdraw → vault lamports −amount (and</text>
+  <text x="74" y="622" class="sub">application_account created w/ github)</text>
+  <text x="58" y="648" class="sub">close     → vault drained, vault_state</text>
+  <text x="74" y="666" class="sub">closed, rent refunded to user</text>
+  <text x="58" y="692" class="sub" fill="#0a9d63">Signer seeds let the vault PDA authorize</text>
+  <text x="58" y="710" class="sub" fill="#0a9d63">SOL movement — no private key exists.</text>
+
+  <!-- security note -->
+  <rect x="560" y="620" width="520" height="68" rx="12" class="box"/>
+  <text x="580" y="646" class="lbl">Key idea</text>
+  <text x="580" y="668" class="sub">Programs = functions · Accounts = mutable args ·</text>
+  <text x="580" y="686" class="sub">PDAs = addresses only the program can authorize ·</text>
+  <text x="580" y="704" class="sub">CPI = one program calling another in the same tx.</text>
+</svg>
