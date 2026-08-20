@@ -82,7 +82,8 @@ sequence-diagram.svg                        # withdraw + CPI sequence
 
 ## Site
 
-A written explanation and a navigable slide deck are published via GitHub Pages:
+Published via GitHub Pages:
 
+- https://srivtx.github.io/pre-req-vault/architecture.html  (architecture diagram — the core view)
 - https://srivtx.github.io/pre-req-vault/  (write-up)
 - https://srivtx.github.io/pre-req-vault/deck.html  (slides)
