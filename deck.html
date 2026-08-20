@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Anchor Vault - Slide Deck</title>
+<style>
+  :root{
+    --bg:#f5f7fb; --surface:#ffffff; --ink:#141a25; --muted:#5b6675; --line:#e3e8f0;
+    --green:#0a9d63; --purple:#7a3ff2; --blue:#1f6feb; --amber:#b58100;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:#0e1116;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink)}
+  .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  #deck{width:1920px;height:1080px;transform-origin:center center;position:relative;background:var(--bg);overflow:hidden;
+        box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .slide{position:absolute;inset:0;display:none;flex-direction:column;padding:96px 130px}
+  .slide.active{display:flex}
+  .kicker{font-size:22px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:18px}
+  .kicker.g{color:var(--green)} .kicker.p{color:var(--purple)}
+  h1{font-size:74px;line-height:1.05;margin:0 0 26px;font-weight:800;letter-spacing:-.02em}
+  h2{font-size:48px;line-height:1.1;margin:0 0 22px;font-weight:800;letter-spacing:-.01em}
+  p{font-size:30px;line-height:1.5;margin:0 0 18px;color:var(--ink)}
+  .sub{color:var(--muted);font-size:26px}
+  .lead{font-size:32px;color:var(--muted);max-width:1400px}
+  .row{display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap}
+  .col{flex:1 1 420px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:30px 34px;margin:0 0 22px}
+  .card h3{margin:0 0 10px;font-size:28px;color:var(--blue)}
+  .card.g h3{color:var(--green)} .card.p h3{color:var(--purple)}
+  ul{font-size:28px;line-height:1.6;margin:0;padding-left:30px;color:var(--ink)}
+  li{margin-bottom:10px}
+  .pill{display:inline-block;padding:4px 14px;border-radius:999px;font-size:18px;font-weight:800;
+        background:rgba(10,157,99,.12);color:var(--green);border:1px solid rgba(10,157,99,.4);margin-right:8px}
+  .pill.p{background:rgba(122,63,242,.12);color:var(--purple);border-color:rgba(122,63,242,.4)}
+  .pill.b{background:rgba(31,111,235,.12);color:var(--blue);border-color:rgba(31,111,235,.4)}
+  pre{background:#0f1729;color:#e6edf3;border-radius:14px;padding:26px 30px;font-size:22px;line-height:1.55;
+      overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;margin:0}
+  .diag{width:100%;height:auto;border:1px solid var(--line);border-radius:16px;background:#fff}
+  .flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;margin-top:10px}
+  .step{flex:1 1 200px;min-width:180px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:8px}
+  .step .ix{font-weight:800;font-size:24px;color:var(--green)}
+  .step .sub{font-size:20px;color:var(--muted)}
+  .arrow{align-self:center;font-size:30px;color:var(--muted);padding:0 6px}
+  .note{background:rgba(31,111,235,.08);border-left:5px solid var(--blue);padding:14px 20px;border-radius:0 12px 12px 0;
+        font-size:24px;color:var(--ink);margin-top:14px}
+  .note.g{background:rgba(10,157,99,.08);border-color:var(--green)}
+  .note.p{background:rgba(122,63,242,.08);border-color:var(--purple)}
+  .ce{font-size:26px;color:var(--muted);text-align:center;max-width:1500px;margin:18px auto 0}
+  table{width:100%;border-collapse:collapse;font-size:24px;margin-top:8px}
+  th,td{text-align:left;padding:16px 18px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.05em}
+  /* nav */
+  #nav{position:absolute;left:0;right:0;bottom:0;height:86px;display:flex;align-items:center;justify-content:center;gap:18px;
+       background:linear-gradient(0deg,rgba(245,247,251,.96),rgba(245,247,251,0));z-index:5}
+  #nav button{font:inherit;font-size:22px;font-weight:700;color:var(--ink);background:var(--surface);border:1px solid var(--line);
+              border-radius:12px;padding:12px 26px;cursor:pointer}
+  #nav button:hover{border-color:var(--blue);color:var(--blue)}
+  #nav button:disabled{opacity:.4;cursor:default}
+  #dots{display:flex;gap:9px}
+  .dot{width:12px;height:12px;border-radius:50%;background:#c7d0de;cursor:pointer;border:0;padding:0}
+  .dot.on{background:var(--blue);transform:scale(1.25)}
+  #counter{position:absolute;top:40px;right:60px;font-size:22px;font-weight:700;color:var(--muted);z-index:5}
+  .title-slide{justify-content:center;align-items:flex-start}
+  .grad-line{width:120px;height:10px;border-radius:6px;background:linear-gradient(90deg,var(--green),var(--blue),var(--purple));margin-bottom:30px}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div id="deck">
+
+    <div id="counter"></div>
+
+    <!-- 1 TITLE -->
+    <section class="slide title-slide active">
+      <div class="grad-line"></div>
+      <h1>The Anchor Vault,<br>from first principles</h1>
+      <p class="lead">A Solana program that locks SOL in a vault you control &mdash; and, in Task 2, registers you on another program during withdrawal. Read as slides; use &rarr; / &larr; or the dots to navigate.</p>
+      <p class="sub" style="margin-top:30px">Sections: concepts &rarr; the codebase &rarr; what we changed &rarr; diagrams</p>
+    </section>
+
+    <!-- 2 LEDGER -->
+    <section class="slide">
+      <div class="kicker">First principles</div>
+      <h2>Solana is one shared ledger</h2>
+      <div class="row">
+        <div class="col"><div class="card"><h3>Code and data are separate</h3><p class="sub" style="font-size:24px">A program is deployed code at an address. It holds no memory between calls. All lasting state lives in accounts.</p></div></div>
+        <div class="col"><div class="card g"><h3>You declare accounts up front</h3><p class="sub" style="font-size:24px">A transaction lists every account it will touch before the program runs. That is why the code always declares accounts first.</p></div></div>
+      </div>
+      <div class="note">Mental model: the ledger is a global key&ndash;value store; "running a program" proposes a change to it.</div>
+    </section>
+
+    <!-- 3 TX -->
+    <section class="slide">
+      <div class="kicker">First principles</div>
+      <h2>A transaction = accounts + instructions + signatures</h2>
+      <div class="row">
+        <div class="col"><ul>
+          <li><b>accounts[]</b> &mdash; everything I will read or write</li>
+          <li><b>instructions[]</b> &mdash; one call into one program (function + args)</li>
+          <li><b>signatures</b> &mdash; proof the key owners authorized it</li>
+        </ul></div>
+        <div class="col"><div class="card p"><h3>An instruction</h3><p class="sub" style="font-size:24px">"run <code>deposit</code> with amount = 1 SOL, using these accounts." A transaction can chain several &mdash; that is how one action touches multiple programs.</p></div></div>
+      </div>
+      <div class="note p">A signed account is marked "signer"; the runtime checks this before the program runs.</div>
+    </section>
+
+    <!-- 4 STATELESS -->
+    <section class="slide">
+      <div class="kicker">First principles</div>
+      <h2>Programs are stateless; accounts hold state</h2>
+      <p class="lead">A program is deployed executable code with <b>no memory of its own</b>. When it runs, the accounts you passed in are its only inputs and the only things it can modify.</p>
+      <div class="note g">Mental shortcut: a program is a <b>function</b>; an account is a <b>mutable argument</b> you hand it.</div>
+    </section>
+
+    <!-- 5 ACCOUNT -->
+    <section class="slide">
+      <div class="kicker">First principles</div>
+      <h2>Inside an account</h2>
+      <div class="row">
+        <div class="col"><ul>
+          <li><b>address</b> &mdash; its public key</li>
+          <li><b>owner</b> &mdash; which program may write its data</li>
+          <li><b>lamports</b> &mdash; its SOL balance</li>
+        </ul></div>
+        <div class="col"><ul>
+          <li><b>data</b> &mdash; arbitrary bytes (state lives here)</li>
+          <li><b>executable</b> &mdash; true only for programs</li>
+          <li><b>signer / writable</b> &mdash; per-transaction flags</li>
+        </ul></div>
+      </div>
+      <div class="note">Only the account's <b>owner program</b> may change its data or debit its lamports. That is why moving SOL out of the vault needs the vault's cooperation.</div>
+    </section>
+
+    <!-- 6 RENT -->
+    <section class="slide">
+      <div class="kicker">First principles</div>
+      <h2>Rent: storing data costs SOL</h2>
+      <p class="lead">Keeping data on the ledger costs a little SOL called <b>rent</b>. Creating an account pre-pays rent (recoverable by closing it).</p>
+      <div class="row">
+        <div class="col"><div class="card"><h3>initialize</h3><p class="sub" style="font-size:24px"><code>user</code> is the <b>payer</b> &mdash; funds rent for <code>vault_state</code>.</p></div></div>
+        <div class="col"><div class="card g"><h3>close</h3><p class="sub" style="font-size:24px"><code>close = user</code> returns the rent when the account is deleted.</p></div></div>
+      </div>
+    </section>
+
+    <!-- 7 PDA -->
+    <section class="slide">
+      <div class="kicker">First principles</div>
+      <h2>PDAs: addresses with no private key</h2>
+      <p class="lead">We want a vault holding your SOL that <b>only our program</b> can empty. A normal account is owned by a keypair &mdash; unsafe to embed. Instead we derive a PDA:</p>
+      <div class="card p" style="text-align:center;font-family:ui-monospace,monospace;font-size:26px">
+        seeds [<span style="color:var(--green)">"vault", vault_state</span>] + program_id + bump &nbsp;&rarr;&nbsp; <span style="color:var(--amber)">off-curve address</span>
+      </div>
+      <div class="note p">Because it is off the elliptic curve, there is <b>mathematically no private key</b> for it &mdash; so nobody can ever sign for it the normal way.</div>
+    </section>
+
+    <!-- 8 PDA SIGN -->
+    <section class="slide">
+      <div class="kicker">First principles</div>
+      <h2>Why PDAs matter: only the program can sign</h2>
+      <p class="lead">The <b>program the PDA belongs to</b> can sign on its behalf at runtime by handing the runtime the original <code>seeds</code> + <code>bump</code> &mdash; the "<b>signer seeds</b>".</p>
+      <div class="note g">This is the whole security model: SOL leaves the vault PDA <b>only</b> when our program presents the correct seeds &mdash; impossible for anyone else to forge. That is why <code>withdraw</code> is the only path that moves SOL out.</div>
+    </section>
+
+    <!-- 9 ANCHOR -->
+    <section class="slide">
+      <div class="kicker">First principles</div>
+      <h2>What Anchor gives us</h2>
+      <div class="row">
+        <div class="col"><ul>
+          <li><b>Accounts structs</b> &mdash; declare accounts + constraints; Anchor validates them first</li>
+          <li><b>Discriminator</b> &mdash; 8-byte tag so the runtime knows the function</li>
+        </ul></div>
+        <div class="col"><ul>
+          <li><b>IDL</b> &mdash; JSON interface used to generate client code</li>
+          <li><b>CPI helpers</b> &mdash; <code>CpiContext</code> makes calling another program one line</li>
+        </ul></div>
+      </div>
+      <div class="note">So <code>#[account(seeds=[...], bump)]</code> means: "Anchor already proved this is the right PDA before calling your function."</div>
+    </section>
+
+    <!-- 10 CODEBASE -->
+    <section class="slide">
+      <div class="kicker">The codebase</div>
+      <h2>File by file</h2>
+      <div class="row">
+        <div class="col"><ul>
+          <li><b>Anchor.toml</b> &mdash; config (cluster, program id, tests)</li>
+          <li><b>lib.rs</b> &mdash; declares the 4 instruction entrypoints</li>
+          <li><b>state.rs</b> &mdash; <code>VaultState</code> (the vault_state data)</li>
+          <li><b>instructions/*.rs</b> &mdash; initialize, deposit, withdraw, close</li>
+        </ul></div>
+        <div class="col"><ul>
+          <li><b>idls/registration.json</b> &mdash; the program we CPI into</li>
+          <li><b>tests/pre-req-vault.ts</b> &mdash; the test we run</li>
+          <li><b>constants.rs / error.rs</b> &mdash; unused template leftovers</li>
+        </ul></div>
+      </div>
+      <div class="note g">Only <code>withdraw.rs</code> changes behaviour for Task 2.</div>
+    </section>
+
+    <!-- 11 CURRENT -->
+    <section class="slide">
+      <div class="kicker">The codebase</div>
+      <h2>What the current code does</h2>
+      <div class="flow">
+        <div class="step"><div class="ix">initialize</div><div class="sub">create vault_state + vault PDAs</div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="step"><div class="ix">deposit</div><div class="sub">user &rarr; vault SOL (CPI System)</div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="step"><div class="ix">withdraw</div><div class="sub">vault &rarr; user SOL (vault signs)</div></div>
+        <div class="arrow">&rarr;</div>
+        <div class="step"><div class="ix">close</div><div class="sub">drain + delete state</div></div>
+      </div>
+      <div class="note p">Task 2 gap: <code>withdraw</code> already declares <code>application_account</code> + <code>application_program</code> but never uses them &mdash; an empty slot after the SOL transfer.</div>
+    </section>
+
+    <!-- 12 LIFECYCLE -->
+    <section class="slide">
+      <div class="kicker">The codebase</div>
+      <h2>The lifecycle, signers &amp; SOL</h2>
+      <table>
+        <thead><tr><th>Instruction</th><th>Signers</th><th>Net vault SOL</th></tr></thead>
+        <tbody>
+          <tr><td><code>initialize</code></td><td>user</td><td>0 (accounts created)</td></tr>
+          <tr><td><code>deposit</code></td><td>user</td><td>+ amount</td></tr>
+          <tr><td><code>withdraw</code></td><td>user + <b>vault PDA</b></td><td>&minus; amount</td></tr>
+          <tr><td><code>close</code></td><td>user + <b>vault PDA</b></td><td>&rarr; 0 (closed)</td></tr>
+        </tbody>
+      </table>
+      <div class="note">The vault PDA must sign whenever SOL leaves it &mdash; that is the only way the runtime accepts the move.</div>
+    </section>
+
+    <!-- 13 WHAT WE WROTE -->
+    <section class="slide">
+      <div class="kicker g">Task 2 &mdash; what we wrote</div>
+      <h2>The CPI, added to withdraw</h2>
+      <pre><code><span style="color:#ff9d8a">// after transferring SOL back to the user:</span>
+let cpi_program = self.application_program.key();
+let cpi_accounts = Initialize {
+    user:    self.user.to_account_info(),
+    account: self.application_account.to_account_info(),
+    system_program: self.system_program.to_account_info(),
+};
+let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+initialize(cpi_ctx, github)?;  <span style="color:#ff9d8a">// records github</span></code></pre>
+      <div class="note g">Plus: added <code>github: String</code> to the instruction, passed <code>"srivtx"</code> from the test, copied the registration IDL into the crate, and deployed our own program to devnet.</div>
+    </section>
+
+    <!-- 14 WHY -->
+    <section class="slide">
+      <div class="kicker p">Task 2 &mdash; why</div>
+      <h2>Decisions as cause &rarr; effect</h2>
+      <table>
+        <thead><tr><th>Decision</th><th>Cause</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td>add <code>github</code> arg</td><td>registration needs it to record you</td><td>IDL + test updated</td></tr>
+          <tr><td>deploy our own id</td><td>grader checks the CPI is not from their program</td><td>fresh keypair &rarr; deployed <code>2RFyz&hellip;</code></td></tr>
+          <tr><td>signer propagates</td><td>user signed the tx</td><td>registration accepts user &amp; creates the account</td></tr>
+          <tr><td>run once / wallet</td><td>registration rejects a 2nd initialize</td><td>use a fresh wallet to re-test</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 15 STRUCTURE DIAGRAM -->
+    <section class="slide">
+      <div class="kicker p">Diagrams</div>
+      <h2>Architecture &mdash; structure</h2>
+      <img class="diag" src="architecture-diagram.svg" alt="architecture structure diagram" />
+    </section>
+
+    <!-- 16 SEQUENCE DIAGRAM -->
+    <section class="slide">
+      <div class="kicker p">Diagrams</div>
+      <h2>Withdraw &mdash; sequence (incl. CPI)</h2>
+      <img class="diag" src="sequence-diagram.svg" alt="withdraw sequence diagram" />
+    </section>
+
+    <!-- 17 BIG PICTURE -->
+    <section class="slide title-slide">
+      <div class="grad-line"></div>
+      <h2>The big picture</h2>
+      <p class="lead">Programs = functions &middot; Accounts = mutable args &middot; PDAs = addresses only the program can authorize &middot; CPI = one program calling another in the same transaction.</p>
+      <div class="note g" style="max-width:1200px">After a successful withdrawal, the registration program records <code>github: srivtx</code> &mdash; provably from our deployed vault program.</div>
+    </section>
+
+    <!-- NAV -->
+    <div id="nav">
+      <button id="prev">&#8592; Prev</button>
+      <div id="dots"></div>
+      <button id="next">Next &#8594;</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  (function(){
+    var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+    var total = slides.length;
+    var current = parseInt(localStorage.getItem('vault-deck-slide') || '0', 10);
+    if (isNaN(current) || current < 0 || current >= total) current = 0;
+
+    var dotsWrap = document.getElementById('dots');
+    var dots = [];
+    slides.forEach(function(_, i){
+      var d = document.createElement('button');
+      d.className = 'dot';
+      d.setAttribute('aria-label', 'Go to slide ' + (i+1));
+      d.addEventListener('click', function(){ go(i); });
+      dotsWrap.appendChild(d);
+      dots.push(d);
+    });
+
+    var prev = document.getElementById('prev');
+    var next = document.getElementById('next');
+    var counter = document.getElementById('counter');
+
+    function render(){
+      slides.forEach(function(s, i){ s.classList.toggle('active', i === current); });
+      dots.forEach(function(d, i){ d.classList.toggle('on', i === current); });
+      prev.disabled = current === 0;
+      next.disabled = current === total - 1;
+      counter.textContent = (current + 1) + ' / ' + total;
+      localStorage.setItem('vault-deck-slide', String(current));
+    }
+    function go(i){
+      current = Math.max(0, Math.min(total - 1, i));
+      render();
+    }
+    prev.addEventListener('click', function(){ go(current - 1); });
+    next.addEventListener('click', function(){ go(current + 1); });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); go(current + 1); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(current - 1); }
+      else if (e.key === 'Home') { go(0); }
+      else if (e.key === 'End') { go(total - 1); }
+    });
+
+    function fit(){
+      var deck = document.getElementById('deck');
+      var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+      deck.style.transform = 'scale(' + s + ')';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+    render();
+  })();
+</script>
+</body>
+</html>
