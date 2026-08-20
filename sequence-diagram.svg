@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="500" viewBox="0 0 1000 500" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="sSlate" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,3 L0,6 Z" fill="#475569"/></marker>
+    <marker id="sGreen" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L8,3 L0,6 Z" fill="#0a9d63"/></marker>
+  </defs>
+  <rect x="0" y="0" width="1000" height="500" fill="#ffffff"/>
+  <text x="40" y="34" font-size="17" font-weight="800" fill="#7a3ff2">Withdraw transaction - sequence (incl. CPI)</text>
+
+  <!-- participant boxes -->
+  <rect x="35" y="50" width="150" height="38" rx="8" fill="#e8f1ff" stroke="#bcd5ff" stroke-width="1.5"/>
+  <text x="110" y="74" font-size="12" font-weight="700" fill="#16202e" text-anchor="middle">user wallet</text>
+  <rect x="235" y="50" width="150" height="38" rx="8" fill="#f1ebfe" stroke="#cdbcf7" stroke-width="1.5"/>
+  <text x="310" y="74" font-size="12" font-weight="700" fill="#16202e" text-anchor="middle">Vault program</text>
+  <rect x="425" y="50" width="150" height="38" rx="8" fill="#eef1f8" stroke="#cdd5e3" stroke-width="1.5"/>
+  <text x="500" y="74" font-size="12" font-weight="700" fill="#16202e" text-anchor="middle">System Program</text>
+  <rect x="625" y="50" width="150" height="38" rx="8" fill="#f1ebfe" stroke="#cdbcf7" stroke-width="1.5"/>
+  <text x="700" y="74" font-size="12" font-weight="700" fill="#16202e" text-anchor="middle">Registration</text>
+  <rect x="815" y="50" width="150" height="38" rx="8" fill="#e6f8f0" stroke="#bfe9d4" stroke-width="1.5"/>
+  <text x="890" y="74" font-size="12" font-weight="700" fill="#16202e" text-anchor="middle">application_acct</text>
+
+  <!-- lifelines -->
+  <line x1="110" y1="88" x2="110" y2="440" stroke="#cdd5e3" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="310" y1="88" x2="310" y2="440" stroke="#cdd5e3" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="500" y1="88" x2="500" y2="440" stroke="#cdd5e3" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="700" y1="88" x2="700" y2="440" stroke="#cdd5e3" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <line x1="890" y1="88" x2="890" y2="440" stroke="#cdd5e3" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <!-- arrows -->
+  <line x1="111" y1="120" x2="309" y2="120" stroke="#475569" stroke-width="2" marker-end="url(#sSlate)"/>
+  <text x="210" y="112" font-size="11" fill="#16202e" text-anchor="middle">1. withdraw(amount, github) [signed]</text>
+
+  <line x1="311" y1="170" x2="499" y2="170" stroke="#475569" stroke-width="2" marker-end="url(#sSlate)"/>
+  <text x="405" y="162" font-size="11" fill="#16202e" text-anchor="middle">2. transfer: vault -&gt; user</text>
+  <text x="405" y="184" font-size="10" fill="#5b6675" text-anchor="middle">(vault PDA signs via seeds)</text>
+
+  <line x1="311" y1="220" x2="699" y2="220" stroke="#0a9d63" stroke-width="2.5" marker-end="url(#sGreen)"/>
+  <text x="505" y="212" font-size="11" fill="#0a9d63" text-anchor="middle">3. CPI: initialize(github)</text>
+
+  <line x1="701" y1="270" x2="889" y2="270" stroke="#0a9d63" stroke-width="2.5" marker-end="url(#sGreen)"/>
+  <text x="795" y="262" font-size="11" fill="#16202e" text-anchor="middle">4. create + write github</text>
+
+  <line x1="699" y1="320" x2="311" y2="320" stroke="#0a9d63" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#sGreen)"/>
+  <text x="505" y="312" font-size="11" fill="#0a9d63" text-anchor="middle">5. ok (return)</text>
+
+  <line x1="309" y1="370" x2="111" y2="370" stroke="#475569" stroke-width="2" marker-end="url(#sSlate)"/>
+  <text x="210" y="362" font-size="11" fill="#16202e" text-anchor="middle">6. withdraw complete</text>
+
+  <text x="40" y="430" font-size="11" fill="#5b6675">Why it works: user signed the transaction; signer status propagates through the CPI, so Registration treats user as the signer that creates application_acct.</text>
+  <text x="40" y="448" font-size="11" fill="#5b6675">One registration per wallet is enforced by the Registration program (a second initialize for the same user is rejected).</text>
+</svg>

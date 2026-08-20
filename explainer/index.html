@@ -88,6 +88,9 @@
   <a href="#c9">9 · The 4 instructions</a>
   <a href="#c10">10 · CPI &amp; Task 2</a>
   <a href="#c11">11 · Big picture</a>
+  <a href="#c12">12 · What we wrote</a>
+  <a href="#c13">13 · Why: decisions &amp; cause→effect</a>
+  <a href="#c14">14 · Architecture diagrams</a>
 </div>
 
 <header>
@@ -437,6 +440,94 @@ initialize(cpi_ctx, github)?;  <span class="cm">// github: your username (String
     </div>
     <div class="note ok"><b>One-liner:</b> Programs = functions · Accounts = mutable args · PDAs = addresses only the program can authorize · CPI = one function calling another.</div>
     <div class="end"><p>You now understand the repo file-by-file and what the current code does. When ready, we edit <code>withdraw.rs</code> (add the CPI + a github argument), deploy our own program to devnet, and run the TS test.</p></div>
+  </section>
+
+
+  <!-- 12 : WHAT WE WROTE -->
+  <section id="c12">
+    <h2><span class="num">12</span>What we actually wrote (Task 2)</h2>
+    <p class="lead">Only one file changes behaviour: <code>instructions/withdraw.rs</code>. The rest is wiring so it compiles, deploys, and is testable.</p>
+
+    <div class="filecard">
+      <div class="path">instructions/withdraw.rs — the CPI (the only real change)</div>
+      <div class="role">After the vault returns SOL to the user, we call the registration program's <code>initialize</code>:</div>
+      <pre><code><span class="cm">// after transferring SOL back to the user:</span>
+<span class="kw">let</span> cpi_program = self.application_program.key();
+<span class="kw">let</span> cpi_accounts = Initialize {
+    user:    self.user.to_account_info(),
+    account: self.application_account.to_account_info(),
+    system_program: self.system_program.to_account_info(),
+};
+<span class="kw">let</span> cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+initialize(cpi_ctx, github)?;  <span class="cm">// records github in the registration program</span></code></pre>
+    </div>
+
+    <div class="filecard">
+      <div class="path">The supporting edits (so the arg flows through)</div>
+      <ul>
+        <li><code>lib.rs</code>: <code>pub fn withdraw(ctx, amount: u64, github: String)</code> — added the <code>github</code> argument.</li>
+        <li><code>tests/pre-req-vault.ts</code>: the test now calls <code>withdraw(amount, "srivtx")</code>.</li>
+        <li><code>programs/pre-req-vault/idls/registration.json</code>: copied the registration IDL here so <code>declare_program!(registration)</code> can generate the CPI client at compile time.</li>
+        <li>Deployed a <b>fresh</b> program to devnet: <code>2RFyzJKvv16zuzPbE9KuNv8GZBXtVEDAMtCdR54H7L9n</code> (via a new keypair + <code>anchor keys sync</code> + <code>solana program deploy</code>).</li>
+      </ul>
+    </div>
+    <div class="note ok">Net effect: a single <code>withdraw</code> transaction now (1) returns SOL to the user and (2) records the wallet's GitHub username in the registration program — provably from <i>our</i> program.</div>
+  </section>
+
+  <!-- 13 : WHY / DECISIONS -->
+  <section id="c13">
+    <h2><span class="num">13</span>Why — every decision as cause &rarr; effect</h2>
+    <p class="lead">Each choice traces back to a first-principles constraint of Solana/Anchor. Read the right column as "what happens because of the left."</p>
+
+    <table>
+      <thead><tr><th>Decision we made</th><th>First-principles cause</th><th>Effect / consequence</th></tr></thead>
+      <tbody>
+        <tr><td>Add <code>github: String</code> to withdraw</td><td>Registration.<code>initialize</code> requires a <code>github</code> arg to record "your details"</td><td>Instruction signature changes &rarr; IDL regenerated &rarr; TS test updated to pass <code>"srivtx"</code></td></tr>
+        <tr><td>Do the CPI <i>after</i> the SOL transfer</td><td>Withdraw already returns user SOL; the registration program is separate, so it must be <b>called</b>, not inlined</td><td>One transaction now touches 3 programs (Vault, System, Registration)</td></tr>
+        <tr><td><code>CpiContext::new(program_pubkey, accounts)</code></td><td>Anchor 1.x changed the API: the first arg is the target program's <b>Pubkey</b>, not an <code>AccountInfo</code></td><td>We pass <code>self.application_program.key()</code> (cost us one compile error to learn)</td></tr>
+        <tr><td>Copy registration IDL into crate <code>idls/</code></td><td><code>declare_program!</code> needs the IDL at compile time to generate the CPI client</td><td>Build succeeds; <code>Initialize</code> + <code>initialize</code> become callable</td></tr>
+        <tr><td>Deploy our <b>own</b> program id</td><td>Grader verifies the CPI is NOT from the provided program or a direct call</td><td>Fresh keypair &rarr; <code>anchor keys sync</code> &rarr; <code>solana program deploy</code> to devnet</td></tr>
+        <tr><td>Run the flow once per wallet</td><td>Registration program rejects a 2nd <code>initialize</code> for the same user</td><td>Use a fresh wallet if you re-test; the vault was already closed</td></tr>
+        <tr><td>Accept <code>pre_req_rs = false</code></td><td><code>initialize</code> only records <code>github</code>; <code>submit_rs</code> sets that flag later</td><td>Success criterion (github recorded) is met; the boolean is out of scope</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Cause &rarr; effect chains worth internalising</h3>
+    <div class="card">
+      <p style="margin-top:0"><b>1. Stateless program &rarr; accounts passed in &rarr; vault_state stores bumps.</b><br>
+      Because the program remembers nothing, every call must re-prove account identity. The <code>vault_state</code> PDA exists purely to persist the <code>vault_bump</code>/<code>state_bump</code> so the program can later re-derive &amp; sign for the <code>vault</code> PDA.</p>
+    </div>
+    <div class="card">
+      <p style="margin-top:0"><b>2. PDA has no private key &rarr; only the program can sign (via seeds) &rarr; vault is safe.</b><br>
+      The vault PDA is "off the curve", so no one can ever hold its key. SOL only leaves it when our program presents <code>signer_seeds</code> (seeds + bump). That makes <code>withdraw</code> the <i>only</i> path that can move SOL out — and the path we extended.</p>
+    </div>
+    <div class="card">
+      <p style="margin-top:0"><b>3. Signer status propagates through a CPI &rarr; registration accepts our user &rarr; account created by OUR program.</b><br>
+      The user signed the outer transaction. Mid-execution, when we CPI into registration, that signer privilege carries over, so registration treats <code>user</code> as the signer that creates <code>application_account</code>. Crucially the CPI originates inside <i>our</i> deployed vault program — exactly what the grader checks.</p>
+    </div>
+    <div class="card">
+      <p style="margin-top:0"><b>4. One registration per wallet (enforced on-chain) &rarr; we deploy our own program &rarr; run once.</b><br>
+      The registration program itself rejects a duplicate <code>initialize</code>. So the whole initialize&rarr;deposit&rarr;withdraw&rarr;close sequence must execute against a wallet that has not registered yet.</p>
+    </div>
+  </section>
+
+  <!-- 14 : DIAGRAMS -->
+  <section id="c14">
+    <h2><span class="num">14</span>Architecture diagrams</h2>
+    <p class="lead">Two views: a <b>structure</b> diagram (programs own accounts; PDAs; the instruction flow with the CPI branch) and a <b>sequence</b> diagram of one <code>withdraw</code> transaction.</p>
+
+    <h3>Structure</h3>
+    <div class="card" style="padding:10px">
+      <img src="../architecture-diagram.svg" alt="Vault architecture diagram" style="width:100%;height:auto;border:1px solid var(--line);border-radius:12px"/>
+    </div>
+
+    <h3>Sequence (withdraw + CPI)</h3>
+    <div class="card" style="padding:10px">
+      <img src="../sequence-diagram.svg" alt="Withdraw sequence diagram" style="width:100%;height:auto;border:1px solid var(--line);border-radius:12px"/>
+    </div>
+
+    <div class="note">Both SVG files are also committed to the repo root (<code>architecture-diagram.svg</code>, <code>sequence-diagram.svg</code>) so they can be opened or edited directly (e.g. in draw.io / Excalidraw).</div>
+    <div class="end"><p>That is the complete picture: what we wrote, why each decision follows from Solana's model, and how the pieces fit. Use the structure + sequence diagrams for the Task 3 deliverable and the video.</p></div>
   </section>
 
 </div>
